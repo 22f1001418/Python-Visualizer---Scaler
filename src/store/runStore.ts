@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { pythonRuntime } from '@/lib/runtime/pythonRuntime';
 import type { PyError, RuntimeStatus, StreamChannel } from '@/lib/runtime/protocol';
 import { selectActiveFile, useFilesStore } from './filesStore';
+import { useTraceStore } from './traceStore';
 
 export interface OutputLine {
   id: number;
@@ -51,6 +52,7 @@ export const useRunStore = create<RunState>()((set, get) => ({
     if (!entry) return;
 
     set({ lines: [], truncated: false, error: null, durationMs: null, fatal: null });
+    useTraceStore.getState().clear();
     pythonRuntime.run(
       files.files.map(({ name, source }) => ({ name, source })),
       entry.name,
@@ -60,7 +62,10 @@ export const useRunStore = create<RunState>()((set, get) => ({
 
   stop: () => pythonRuntime.stop(),
 
-  clearOutput: () => set({ lines: [], truncated: false, error: null, durationMs: null }),
+  clearOutput: () => {
+    set({ lines: [], truncated: false, error: null, durationMs: null });
+    useTraceStore.getState().clear();
+  },
 }));
 
 // One subscription for the app's lifetime; the worker is a singleton too.
@@ -90,6 +95,7 @@ pythonRuntime.subscribe((message) => {
 
     case 'finished':
       useRunStore.setState({ error: message.error, durationMs: message.durationMs });
+      useTraceStore.getState().setResult(message.trace, message.stdout);
       break;
 
     case 'fatal':

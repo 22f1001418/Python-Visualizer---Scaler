@@ -86,6 +86,36 @@ def _describe(exc, filenames):
     }
 
 
+class _StdoutRecorder:
+    """Wraps Pyodide's stdout so the run can be replayed, not just watched.
+
+    Text still goes straight through to the UI as it is written — that is what
+    makes a long loop feel alive — but a copy is kept here. Each traced step
+    records how many characters had been written by that point, which is how the
+    output pane can rewind in step with the scrubber.
+    """
+
+    def __init__(self, wrapped):
+        self._wrapped = wrapped
+        self._chunks = []
+        self.length = 0
+
+    def write(self, text):
+        self._chunks.append(text)
+        self.length += len(text)
+        return self._wrapped.write(text)
+
+    def flush(self):
+        self._wrapped.flush()
+
+    def __getattr__(self, name):
+        return getattr(self._wrapped, name)
+
+    @property
+    def text(self):
+        return "".join(self._chunks)
+
+
 def _make_input(stream):
     """An input() that echoes, the way a terminal session reads.
 
@@ -107,8 +137,11 @@ def _make_input(stream):
     return _input
 
 
-def run(files, entry, stdin_text=""):
-    """Execute `entry` with `files` on disk. Returns a JSON string."""
+def run(files, entry, stdin_text="", max_steps=2000, max_seconds=20):
+    """Execute `entry` with `files` on disk, recording a trace.
+
+    Returns a JSON string: the outcome, the full stdout, and the timeline.
+    """
     files = dict(files)
     if entry not in files:
         return json.dumps(
@@ -127,9 +160,12 @@ def run(files, entry, stdin_text=""):
     _sync_workdir(files)
 
     original_stdin = sys.stdin
+    original_stdout = sys.stdout
     original_input = builtins.input
     stdin_stream = io.StringIO(stdin_text)
+    recorder = _StdoutRecorder(original_stdout)
     sys.stdin = stdin_stream
+    sys.stdout = recorder
     builtins.input = _make_input(stdin_stream)
 
     namespace = {
@@ -141,22 +177,45 @@ def run(files, entry, stdin_text=""):
         code = compile(files[entry], entry, "exec")
     except SyntaxError as exc:
         sys.stdin = original_stdin
+        sys.stdout = original_stdout
         builtins.input = original_input
-        return json.dumps({"ok": False, "error": _describe(exc, set(files))})
+        # A file that does not compile never runs, so there is no timeline.
+        return json.dumps(
+            {"ok": False, "error": _describe(exc, set(files)), "stdout": "", "trace": None}
+        )
+
+    tracer = Recorder(set(files), max_steps, max_seconds, recorder)
+    error = None
 
     try:
+        sys.settrace(tracer.trace)
         exec(code, namespace)
-        return json.dumps({"ok": True})
     except SystemExit as exc:
         # sys.exit() is a normal way for a program to finish, not a crash.
-        return json.dumps({"ok": True, "exit_code": exc.code if exc.code is not None else 0})
+        namespace["__pylens_exit__"] = exc.code
     except BaseException as exc:  # noqa: BLE001 - the point is to report anything
-        return json.dumps({"ok": False, "error": _describe(exc, set(files))})
+        error = _describe(exc, set(files))
     finally:
+        sys.settrace(None)
         sys.stdin = original_stdin
         builtins.input = original_input
-        sys.stdout.flush()
+        recorder.flush()
         sys.stderr.flush()
+        sys.stdout = original_stdout
+
+    return json.dumps(
+        {
+            "ok": error is None,
+            "error": error,
+            "stdout": recorder.text,
+            "trace": {
+                "steps": tracer.steps,
+                "capped": tracer.capped,
+                "capReason": tracer.cap_reason,
+                "entry": entry,
+            },
+        }
+    )
 
 
 def run_json(payload_json):
@@ -166,4 +225,10 @@ def run_json(payload_json):
     entirely — nothing to destroy, nothing to leak between runs.
     """
     payload = json.loads(payload_json)
-    return run(payload["files"], payload["entry"], payload.get("stdin", ""))
+    return run(
+        payload["files"],
+        payload["entry"],
+        payload.get("stdin", ""),
+        payload.get("maxSteps", 2000),
+        payload.get("maxSeconds", 20),
+    )

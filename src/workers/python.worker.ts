@@ -1,7 +1,9 @@
 /// <reference lib="webworker" />
 
+import tracerSource from '@/python/tracer.py?raw';
 import runnerSource from '@/python/runner.py?raw';
 import type { FromWorkerMessage, PyError, ToWorkerMessage } from '@/lib/runtime/protocol';
+import type { Trace } from '@/lib/trace/types';
 
 /**
  * The Python worker.
@@ -59,6 +61,10 @@ async function boot(): Promise<void> {
   if (interruptBuffer) pyodide.setInterruptBuffer(interruptBuffer);
 
   pyodide.FS.mkdirTree('/home/pylens');
+
+  // Both modules are executed into the same namespace, tracer first: the runner
+  // calls Recorder directly rather than importing it from the virtual filesystem.
+  await pyodide.runPythonAsync(tracerSource);
   await pyodide.runPythonAsync(runnerSource);
 
   const pythonVersion = String(
@@ -81,6 +87,8 @@ async function run(message: Extract<ToWorkerMessage, { kind: 'run' }>): Promise<
   const startedAt = performance.now();
 
   let error: PyError | null = null;
+  let stdout = '';
+  let trace: Trace | null = null;
 
   try {
     const payload = JSON.stringify({
@@ -91,8 +99,15 @@ async function run(message: Extract<ToWorkerMessage, { kind: 'run' }>): Promise<
 
     pyodide.globals.set('__pylens_payload', payload);
     const raw = String(await pyodide.runPythonAsync('run_json(__pylens_payload)'));
-    const result = JSON.parse(raw) as { ok: boolean; error?: PyError };
+    const result = JSON.parse(raw) as {
+      ok: boolean;
+      error?: PyError | null;
+      stdout?: string;
+      trace?: Trace | null;
+    };
     if (!result.ok && result.error) error = result.error;
+    stdout = result.stdout ?? '';
+    trace = result.trace ?? null;
   } catch (thrown) {
     // Reaching here means the driver itself broke, not the student's program.
     error = {
@@ -109,6 +124,8 @@ async function run(message: Extract<ToWorkerMessage, { kind: 'run' }>): Promise<
     runId: message.runId,
     durationMs: Math.round(performance.now() - startedAt),
     error,
+    stdout,
+    trace,
   });
   post({ kind: 'status', status: 'ready' });
   currentRunId = null;

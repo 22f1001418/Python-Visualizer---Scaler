@@ -1,9 +1,11 @@
 import { PaneFrame } from '@/components/layout/PaneFrame';
 import { ConsoleView } from '@/components/output/ConsoleView';
 import { ErrorCard } from '@/components/output/ErrorCard';
+import { ReplayView } from '@/components/output/ReplayView';
 import { Button } from '@/components/ui/Button';
 import { TerminalIcon } from '@/components/ui/Icons';
 import { useRunStore } from '@/store/runStore';
+import { selectVisibleStdout, useTraceStore } from '@/store/traceStore';
 
 export function OutputPane() {
   const lines = useRunStore((s) => s.lines);
@@ -14,7 +16,13 @@ export function OutputPane() {
   const fatal = useRunStore((s) => s.fatal);
   const clearOutput = useRunStore((s) => s.clearOutput);
 
-  const isEmpty = lines.length === 0 && !error && !fatal;
+  const trace = useTraceStore((s) => s.trace);
+  const stepIndex = useTraceStore((s) => s.stepIndex);
+  const visibleStdout = useTraceStore(selectVisibleStdout);
+
+  const replaying = trace !== null && trace.steps.length > 0;
+  const atEnd = !replaying || stepIndex >= trace.steps.length - 1;
+  const isEmpty = lines.length === 0 && !error && !fatal && !replaying;
 
   return (
     <PaneFrame
@@ -22,7 +30,11 @@ export function OutputPane() {
       icon={<TerminalIcon className="size-full" />}
       actions={
         <>
-          {durationMs !== null && !error ? (
+          {replaying && !atEnd ? (
+            <span className="mr-1 text-[0.78em] text-accent">
+              replaying to step {stepIndex + 1}
+            </span>
+          ) : durationMs !== null && !error ? (
             <span className="mr-1 font-mono text-[0.78em] text-subtle">
               finished in {formatDuration(durationMs)}
             </span>
@@ -49,8 +61,15 @@ export function OutputPane() {
         </p>
       ) : null}
 
-      {lines.length > 0 ? <ConsoleView lines={lines} truncated={truncated} /> : null}
-      {error ? <ErrorCard error={error} /> : null}
+      {/* While the program runs, output streams in live; once it finishes there
+          is a recording, and the timeline decides how much of it to show. */}
+      {replaying ? (
+        <ReplayView text={visibleStdout} atEnd={atEnd} />
+      ) : lines.length > 0 ? (
+        <ConsoleView lines={lines} truncated={truncated} />
+      ) : null}
+
+      {error && atEnd ? <ErrorCard error={error} /> : null}
     </PaneFrame>
   );
 }

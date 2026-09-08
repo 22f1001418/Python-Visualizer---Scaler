@@ -257,6 +257,41 @@
   }
 }
 
+@layer components {
+  /* The scrubber. Deliberately chunky: it is dragged live in front of a class,
+     often with a trackpad, sometimes by a student at the front of the room. */
+  .pl-scrubber {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: calc(6px * var(--ui-scale));
+    border-radius: 999px;
+    background: var(--c-bg-active);
+    cursor: pointer;
+  }
+  .pl-scrubber::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: calc(14px * var(--ui-scale));
+    height: calc(14px * var(--ui-scale));
+    border-radius: 999px;
+    background: var(--c-accent);
+    border: 2px solid var(--c-bg-panel);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  }
+  .pl-scrubber::-moz-range-thumb {
+    width: calc(14px * var(--ui-scale));
+    height: calc(14px * var(--ui-scale));
+    border-radius: 999px;
+    background: var(--c-accent);
+    border: 2px solid var(--c-bg-panel);
+  }
+  .pl-scrubber:focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: 3px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

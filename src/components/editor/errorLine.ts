@@ -45,6 +45,12 @@ const markedLineTheme = EditorView.baseTheme({
     backgroundColor: 'var(--c-error-line)',
     boxShadow: 'inset 3px 0 0 var(--c-error)',
   },
+  // The line the scrubber is on. Read from the back of a room, so it gets a
+  // solid band rather than a tint.
+  '.pl-current-line': {
+    backgroundColor: 'var(--c-line-highlight)',
+    boxShadow: 'inset 3px 0 0 var(--c-line-highlight-edge)',
+  },
 });
 
 export const markedLine: Extension = [markedLineField, markedLineTheme];

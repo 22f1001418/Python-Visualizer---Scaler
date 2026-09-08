@@ -1,3 +1,5 @@
+import type { Trace } from '@/lib/trace/types';
+
 /**
  * The contract between the UI thread and the Python worker.
  *
@@ -53,5 +55,14 @@ export type FromWorkerMessage =
   | { kind: 'status'; status: RuntimeStatus }
   | { kind: 'ready'; pythonVersion: string; bootMs: number }
   | { kind: 'stream'; runId: string; channel: StreamChannel; text: string }
-  | { kind: 'finished'; runId: string; durationMs: number; error: PyError | null }
+  | {
+      kind: 'finished';
+      runId: string;
+      durationMs: number;
+      error: PyError | null;
+      /** The complete stdout of the run, for replaying output alongside the trace. */
+      stdout: string;
+      /** null when the program never ran (a syntax error, say). */
+      trace: Trace | null;
+    }
   | { kind: 'fatal'; message: string };

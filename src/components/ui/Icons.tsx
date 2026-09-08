@@ -61,3 +61,36 @@ export const TerminalIcon = ({ className }: IconProps) => (
     <path d="m5 7 4 4-4 4M12 15h7" />
   </svg>
 );
+
+export const PauseIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className} fill="currentColor" stroke="none">
+    <rect x="6.5" y="5" width="3.6" height="14" rx="1.2" />
+    <rect x="13.9" y="5" width="3.6" height="14" rx="1.2" />
+  </svg>
+);
+
+export const SkipStartIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className} fill="currentColor" stroke="none">
+    <rect x="5" y="5" width="2.6" height="14" rx="1.1" />
+    <path d="M19 6.1v11.8a1 1 0 0 1-1.53.85l-9-5.9a1 1 0 0 1 0-1.7l9-5.9A1 1 0 0 1 19 6.1Z" />
+  </svg>
+);
+
+export const SkipEndIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className} fill="currentColor" stroke="none">
+    <rect x="16.4" y="5" width="2.6" height="14" rx="1.1" />
+    <path d="M5 6.1v11.8a1 1 0 0 0 1.53.85l9-5.9a1 1 0 0 0 0-1.7l-9-5.9A1 1 0 0 0 5 6.1Z" />
+  </svg>
+);
+
+export const StepBackIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="m14 6-6 6 6 6" />
+  </svg>
+);
+
+export const StepForwardIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="m10 6 6 6-6 6" />
+  </svg>
+);

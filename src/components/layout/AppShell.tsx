@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 import { Workspace } from './Workspace';
+import { TransportBar } from '@/components/trace/TransportBar';
 import { applyDocumentChrome } from '@/lib/applyDocumentChrome';
 import { useAppShortcuts } from '@/hooks/useAppShortcuts';
 import { useRunStore } from '@/store/runStore';
@@ -28,6 +29,9 @@ export function AppShell() {
       {/* Presenter mode drops the top bar: on a projector every row of chrome
           is a row of code the back of the room cannot read. */}
       {!presenter ? <TopBar /> : null}
+      {/* The timeline sits above the workspace and outlives the top bar: in
+          presenter mode it is the only control that still matters. */}
+      <TransportBar />
       <main className="flex min-h-0 flex-1 flex-col gap-px bg-line">
         <Workspace />
       </main>

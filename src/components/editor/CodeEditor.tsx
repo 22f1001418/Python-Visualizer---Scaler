@@ -38,8 +38,10 @@ interface CodeEditorProps {
   onChange: (source: string) => void;
   onCursorChange: (line: number, column: number) => void;
   onRun: () => void;
-  /** 1-based line to flag as the source of an error, or null. */
-  errorLine: number | null;
+  /** Clicking a line number asks the timeline to jump to that line. */
+  onGutterJump: (line: number) => void;
+  /** 1-based line to mark, with the CSS class to mark it with. */
+  marked: { line: number; className: string } | null;
 }
 
 export function CodeEditor({
@@ -48,15 +50,16 @@ export function CodeEditor({
   onChange,
   onCursorChange,
   onRun,
-  errorLine,
+  onGutterJump,
+  marked,
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
 
   // Handlers are read through a ref so that a re-render never has to rebuild
   // the editor — rebuilding would drop the cursor and the undo history.
-  const handlers = useRef({ onChange, onCursorChange, onRun });
-  handlers.current = { onChange, onCursorChange, onRun };
+  const handlers = useRef({ onChange, onCursorChange, onRun, onGutterJump });
+  handlers.current = { onChange, onCursorChange, onRun, onGutterJump };
 
   useEffect(() => {
     if (!host.current) return;
@@ -64,7 +67,16 @@ export function CodeEditor({
     const state = EditorState.create({
       doc: initialSource,
       extensions: [
-        lineNumbers(),
+        lineNumbers({
+          domEventHandlers: {
+            // Clicking a line number scrubs to the next moment that line ran —
+            // the fastest way to answer "what happens when we get here?".
+            mousedown: (view, block) => {
+              handlers.current.onGutterJump(view.state.doc.lineAt(block.from).number);
+              return true;
+            },
+          },
+        }),
         foldGutter(),
         highlightActiveLineGutter(),
         highlightActiveLine(),
@@ -123,17 +135,13 @@ export function CodeEditor({
     const instance = view.current;
     if (!instance) return;
 
-    instance.dispatch({
-      effects: setMarkedLine.of(
-        errorLine === null ? null : { line: errorLine, className: 'pl-error-line' }
-      ),
-    });
+    instance.dispatch({ effects: setMarkedLine.of(marked) });
 
-    if (errorLine !== null && errorLine <= instance.state.doc.lines) {
-      const position = instance.state.doc.line(errorLine).from;
+    if (marked && marked.line >= 1 && marked.line <= instance.state.doc.lines) {
+      const position = instance.state.doc.line(marked.line).from;
       instance.dispatch({ effects: EditorView.scrollIntoView(position, { y: 'center' }) });
     }
-  }, [errorLine]);
+  }, [marked]);
 
   return <div ref={host} className="h-full min-h-0 overflow-hidden" />;
 }

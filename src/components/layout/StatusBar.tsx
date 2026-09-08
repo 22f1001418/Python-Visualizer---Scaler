@@ -1,4 +1,5 @@
 import { useRunStore } from '@/store/runStore';
+import { useTraceStore } from '@/store/traceStore';
 import { useUiStore } from '@/store/uiStore';
 import type { RuntimeStatus } from '@/lib/runtime/protocol';
 
@@ -24,6 +25,8 @@ export function StatusBar() {
   const status = useRunStore((s) => s.status);
   const pythonVersion = useRunStore((s) => s.pythonVersion);
   const bootMs = useRunStore((s) => s.bootMs);
+  const trace = useTraceStore((s) => s.trace);
+  const stepIndex = useTraceStore((s) => s.stepIndex);
 
   return (
     <footer className="flex h-7 shrink-0 items-center gap-3 border-t border-line bg-panel px-3 text-[0.78em] text-subtle">
@@ -44,7 +47,11 @@ export function StatusBar() {
         <span>
           Ln {cursor.line}, Col {cursor.column}
         </span>
-        <span>Step —/—</span>
+        <span className="tabular-nums">
+          {trace && trace.steps.length > 0
+            ? `Step ${stepIndex + 1}/${trace.steps.length}`
+            : 'Step —/—'}
+        </span>
       </span>
     </footer>
   );
