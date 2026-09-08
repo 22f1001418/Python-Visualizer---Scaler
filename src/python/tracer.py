@@ -10,6 +10,7 @@ list is the misconception this tool exists to fix, and it is only visible if the
 snapshot keeps object ids rather than copying values.
 """
 
+import inspect
 import sys
 import time
 
@@ -110,6 +111,21 @@ def _register(obj, heap, depth):
         entry["truncated"] = len(obj) > MAX_ITEMS
         entry["length"] = len(obj)
 
+    elif inspect.isgenerator(obj):
+        # A generator is a paused function. Keeping its frame's variables in the
+        # snapshot is what makes laziness visible: the locals are still there
+        # between one next() and the next.
+        entry["kind"] = "generator"
+        entry["name"] = obj.gi_code.co_name
+        entry["state"] = inspect.getgeneratorstate(obj).replace("GEN_", "").lower()
+        paused = obj.gi_frame
+        entry["line"] = _line_of(paused) if paused else None
+        entry["locals"] = (
+            [[name, _value(val, heap, child)] for name, val in paused.f_locals.items()]
+            if paused
+            else []
+        )
+
     elif isinstance(obj, type):
         entry["kind"] = "class"
         entry["name"] = obj.__name__
@@ -136,7 +152,8 @@ def _register(obj, heap, depth):
         entry["kind"] = "opaque"
         entry["repr"] = _safe_repr(obj)
 
-    return entry
+    # The id, not the entry: callers hold references, never copies.
+    return key
 
 
 def _line_of(frame):

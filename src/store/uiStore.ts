@@ -1,20 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+// Type-only import: erased at build time, so the store never pulls the lens
+// components into its module graph.
+import type { LensId } from '@/components/lenses/registry';
 
 export type Theme = 'light' | 'dark';
-
-/** Which concept lens the visualizer pane is showing. Only the shell exists in
- *  phase 0 — the lenses themselves land in phase 3. */
-export type LensId =
-  | 'stack'
-  | 'memory'
-  | 'loop'
-  | 'recursion'
-  | 'structures'
-  | 'oop'
-  | 'sorting'
-  | 'generator'
-  | 'complexity';
 
 interface UiState {
   theme: Theme;
@@ -36,7 +26,7 @@ export const useUiStore = create<UiState>()(
     (set) => ({
       theme: 'dark',
       presenter: false,
-      lens: 'stack',
+      lens: 'memory',
       cursor: { line: 1, column: 1 },
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),

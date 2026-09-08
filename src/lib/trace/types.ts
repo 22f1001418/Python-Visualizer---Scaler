@@ -63,13 +63,29 @@ export interface FunctionObject extends HeapBase {
   name: string;
 }
 
+/** A paused function. Its locals survive between yields — that is the lesson. */
+export interface GeneratorObject extends HeapBase {
+  kind: 'generator';
+  name: string;
+  state: 'created' | 'suspended' | 'running' | 'closed';
+  /** Line the generator is paused on, or null once it is finished. */
+  line: number | null;
+  locals: Array<[string, PyValue]>;
+}
+
 export interface OpaqueObject extends HeapBase {
   kind: 'opaque';
   repr: string;
 }
 
 export type HeapObject =
-  SequenceObject | MappingObject | InstanceObject | ClassObject | FunctionObject | OpaqueObject;
+  | SequenceObject
+  | MappingObject
+  | InstanceObject
+  | ClassObject
+  | FunctionObject
+  | GeneratorObject
+  | OpaqueObject;
 
 export interface TraceFrame {
   id: number;

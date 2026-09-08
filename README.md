@@ -20,23 +20,48 @@ tree.
 
 ## Status
 
-Phases 0 through 2 are complete. PyLens is a working Python IDE **and** a
-working time machine: every run is recorded step by step, and the timeline above
-the workspace scrubs through it. The editor's highlighted line and the output
-pane both follow the scrubber, so you can walk a class backwards through a
-program and watch the printed output un-print itself.
+Phases 0 through 3 are complete. PyLens is a working Python IDE, a time machine
+over any run, and six ways of looking at the moment you have scrubbed to.
 
-What is still missing is the picture. The visualizer pane shows a bare summary
-of the current step; phase 3 replaces it with the concept lenses.
+The scope is deliberately the **foundations of Python**, not data structures and
+algorithms. Everything DSA-flavoured is parked under
+[aspirational extensions](#aspirational-extensions) rather than half-built.
 
 | Phase | Scope | State |
 | ----- | ----- | ----- |
 | 0 | Scaffold, theme tokens, layout shell | done |
 | 1 | CodeMirror editor, Pyodide worker, run/output, friendly errors | done |
 | 2 | Trace engine, timeline store, scrubber | done |
-| 3 | Concept lenses | next |
-| 4 | Presenter tools, annotations, sharing | |
+| 3 | Concept lenses | done |
+| 4 | Presenter tools, annotations, sharing | next |
 | 5 | Deployment configs, docs, polish | |
+
+## The lenses
+
+Every lens renders the same recorded step. Switch between them and the picture
+changes; the program does not re-run, and two lenses never disagree.
+
+| Lens | What it shows |
+| ---- | ------------- |
+| **Memory** | Names on the left, objects on the right, arrows between them. When two names point at one object the card says so — this is the lens the tool exists for. |
+| **Call stack** | Which function is running, who called it, what each call is holding. Says out loud when a function is on the stack more than once. |
+| **Loop table** | The trace table a teacher draws by hand: one row per pass, one column per variable that actually changes. Click a row to scrub to that pass. |
+| **Collections** | Lists, tuples, sets and dictionaries drawn the way they behave — a list gets numbered cells, a set is told it has no order, a tuple says it cannot be changed. |
+| **Objects** | Classes beside the objects made from them, so what is shared and what is per-object is visible rather than asserted. |
+| **Generators** | Where a paused function stopped, which variables it is still holding, and what it has handed out so far. |
+
+A lens with nothing to show in the current run is dimmed rather than hidden, so
+a lesson can be planned around a tab that will always be in the same place.
+
+## Aspirational extensions
+
+Deliberately not built. These are data-structures-and-algorithms material, and
+PyLens is aimed at students learning the foundations of the language:
+
+- recursion tree (the Call stack lens already shows recursive calls honestly)
+- sorting animator driven by the student's own sort
+- operation counter and empirical Big-O curve
+- stack and queue views
 
 ## Getting started
 
@@ -75,6 +100,7 @@ src/
   components/
     editor/     CodeMirror setup: theme, completions, tabs, line marking
     layout/     app shell, top bar, status bar, workspace splits, pane chrome
+    lenses/     the six concept lenses, plus their shared value rendering
     output/     live console, replayed output, the friendly error card
     trace/      the timeline transport bar and scrubber
     panes/      the three workspace panes
@@ -82,7 +108,7 @@ src/
   hooks/        global keyboard shortcuts
   lib/
     runtime/    worker protocol and the main-thread client
-    trace/      the recorded-run types every lens reads
+    trace/      recorded-run types, plus the selectors the lenses read
     friendlyErrors.ts   Python exceptions rewritten in plain English
   python/
     runner.py   the driver that executes student code inside Pyodide
@@ -117,6 +143,13 @@ that fits, and says so.
 
 Nothing is re-executed while you scrub. The run is over; the UI is reading a
 list.
+
+The recorder is plain CPython, so it can be exercised without a browser:
+
+```bash
+python3 scripts/trace-smoke.py            # built-in sample
+python3 scripts/trace-smoke.py some.py    # your own file
+```
 
 `input()` reads from the Input box beside the editor and echoes what it consumed,
 so the output reads like a real terminal transcript rather than a run of prompts
