@@ -23,5 +23,13 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        // The editor is the biggest dependency and the least likely to change.
+        // Splitting it keeps app updates off the critical path of a cold load.
+        manualChunks: (id) =>
+          id.includes('@codemirror') || id.includes('@lezer') ? 'editor' : undefined,
+      },
+    },
   },
 });

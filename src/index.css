@@ -59,6 +59,20 @@
   --c-line-highlight: #fdf0c8;
   --c-line-highlight-edge: #e0a800;
 
+  /* editor syntax */
+  --c-syn-keyword: #a52ab5;
+  --c-syn-string: #0a7d3f;
+  --c-syn-number: #b3541e;
+  --c-syn-comment: #6d7885;
+  --c-syn-function: #1f6feb;
+  --c-syn-builtin: #0b6b7a;
+  --c-syn-operator: #4a5560;
+  --c-syn-decorator: #a15c00;
+  --c-editor-gutter: #6d7885;
+  --c-editor-selection: #cfe0fb;
+  --c-editor-active-line: #eef1f5;
+  --c-error-line: #fbdedb;
+
   --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.04);
 
   /* one knob drives every size in the app; presenter mode turns it up */
@@ -105,6 +119,20 @@
   --c-ref-arrow: #b39bff;
   --c-line-highlight: #3a3212;
   --c-line-highlight-edge: #e0a800;
+
+  /* editor syntax */
+  --c-syn-keyword: #ff9ae0;
+  --c-syn-string: #8ee59b;
+  --c-syn-number: #ffb787;
+  --c-syn-comment: #7d8b9a;
+  --c-syn-function: #79bbff;
+  --c-syn-builtin: #6fe0ef;
+  --c-syn-operator: #adb9c7;
+  --c-syn-decorator: #f2b544;
+  --c-editor-gutter: #6b7887;
+  --c-editor-selection: #2b4a72;
+  --c-editor-active-line: #1a212a;
+  --c-error-line: #401b18;
 
   --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
 }

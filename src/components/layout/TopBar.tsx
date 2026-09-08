@@ -1,5 +1,8 @@
+import { useShallow } from 'zustand/react/shallow';
 import { Button } from '@/components/ui/Button';
-import { MoonIcon, PlayIcon, PresentIcon, SunIcon } from '@/components/ui/Icons';
+import { MoonIcon, PlayIcon, PresentIcon, StopIcon, SunIcon } from '@/components/ui/Icons';
+import { selectActiveFile, useFilesStore } from '@/store/filesStore';
+import { useRunStore } from '@/store/runStore';
 import { useUiStore } from '@/store/uiStore';
 
 export function TopBar() {
@@ -7,6 +10,14 @@ export function TopBar() {
   const presenter = useUiStore((s) => s.presenter);
   const toggleTheme = useUiStore((s) => s.toggleTheme);
   const togglePresenter = useUiStore((s) => s.togglePresenter);
+
+  const activeFile = useFilesStore(useShallow(selectActiveFile));
+  const status = useRunStore((s) => s.status);
+  const start = useRunStore((s) => s.start);
+  const stop = useRunStore((s) => s.stop);
+
+  const isRunning = status === 'running';
+  const isBooting = status === 'booting';
 
   return (
     <header className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-panel px-3">
@@ -17,19 +28,32 @@ export function TopBar() {
 
       <span className="h-4 w-px bg-line" />
 
-      <span className="truncate text-[0.9em] text-muted">untitled.py</span>
+      <span className="truncate font-mono text-[0.85em] text-muted">{activeFile.name}</span>
 
       <div className="ml-auto flex items-center gap-1">
-        {/* Wired up in phase 1, once the Pyodide worker exists. */}
-        <Button variant="primary" icon={<PlayIcon className="size-full" />} disabled>
-          Run
-        </Button>
+        {isRunning ? (
+          <Button variant="primary" icon={<StopIcon className="size-full" />} onClick={stop}>
+            Stop
+          </Button>
+        ) : (
+          <Button
+            variant="primary"
+            icon={<PlayIcon className="size-full" />}
+            onClick={start}
+            disabled={isBooting}
+            title="Run (Ctrl/Cmd + Enter)"
+          >
+            {isBooting ? 'Starting…' : 'Run'}
+          </Button>
+        )}
+
         <span className="mx-1 h-4 w-px bg-line" />
+
         <Button
           icon={<PresentIcon className="size-full" />}
           active={presenter}
           onClick={togglePresenter}
-          title="Presenter mode"
+          title="Presenter mode (Ctrl/Cmd + Shift + P)"
           aria-label="Toggle presenter mode"
         />
         <Button

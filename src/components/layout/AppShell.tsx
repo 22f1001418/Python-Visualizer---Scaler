@@ -4,6 +4,7 @@ import { TopBar } from './TopBar';
 import { Workspace } from './Workspace';
 import { applyDocumentChrome } from '@/lib/applyDocumentChrome';
 import { useAppShortcuts } from '@/hooks/useAppShortcuts';
+import { useRunStore } from '@/store/runStore';
 import { useUiStore } from '@/store/uiStore';
 
 export function AppShell() {
@@ -15,6 +16,12 @@ export function AppShell() {
   useEffect(() => {
     applyDocumentChrome(theme, presenter);
   }, [theme, presenter]);
+
+  // Start downloading the interpreter immediately. It takes a couple of seconds,
+  // and nobody wants that wait to begin when they press Run in front of a class.
+  useEffect(() => {
+    useRunStore.getState().boot();
+  }, []);
 
   return (
     <div className="flex h-full flex-col bg-app">
