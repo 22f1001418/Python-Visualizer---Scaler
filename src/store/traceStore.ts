@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Trace, TraceStep } from '@/lib/trace/types';
 
 /** Steps per second at 1× — slow enough to narrate over. */
-export const BASE_STEPS_PER_SECOND = 5;
+export const BASE_STEPS_PER_SECOND = 2.5;
 export const SPEEDS = [0.5, 1, 2, 4] as const;
 export type Speed = (typeof SPEEDS)[number];
 

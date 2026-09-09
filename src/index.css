@@ -71,6 +71,7 @@
   --c-editor-gutter: #6d7885;
   --c-editor-selection: #cfe0fb;
   --c-editor-active-line: #eef1f5;
+  --c-selection: rgba(31, 111, 235, 0.18);
   --c-error-line: #fbdedb;
 
   --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 12px rgb(0 0 0 / 0.04);
@@ -130,11 +131,21 @@
   --c-syn-operator: #adb9c7;
   --c-syn-decorator: #f2b544;
   --c-editor-gutter: #6b7887;
-  --c-editor-selection: #2b4a72;
+  --c-editor-selection: rgba(76, 147, 255, 0.28);
   --c-editor-active-line: #1a212a;
+  --c-selection: rgba(38, 76, 130, 0.45);
   --c-error-line: #401b18;
 
   --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
+}
+
+/* App-wide text selection colour. CodeMirror styles its own selection
+   (theme.ts) with --c-editor-selection; this covers everything else — the
+   read-only code pane on small screens, lesson text, output — so a
+   trackpad/touch selection always leaves a visible mark instead of falling
+   back to the browser's default (very bright against a dark background). */
+::selection {
+  background-color: var(--c-selection);
 }
 
 /* Presenter mode: bigger type, heavier borders, more air. Driven off a single
