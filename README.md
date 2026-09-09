@@ -20,8 +20,10 @@ tree.
 
 ## Status
 
-Phases 0 through 3 are complete. PyLens is a working Python IDE, a time machine
-over any run, and six ways of looking at the moment you have scrubbed to.
+Phases 0 through 4 are complete. PyLens is a working Python IDE, a time machine
+over any run, six ways of looking at the moment you have scrubbed to, and the
+tools to teach from it: a lesson deck, notes pinned to steps, predict-the-output,
+presenter mode, and a share link that carries the whole lesson.
 
 The scope is deliberately the **foundations of Python**, not data structures and
 algorithms. Everything DSA-flavoured is parked under
@@ -33,8 +35,8 @@ algorithms. Everything DSA-flavoured is parked under
 | 1 | CodeMirror editor, Pyodide worker, run/output, friendly errors | done |
 | 2 | Trace engine, timeline store, scrubber | done |
 | 3 | Concept lenses | done |
-| 4 | Presenter tools, annotations, sharing | next |
-| 5 | Deployment configs, docs, polish | |
+| 4 | Presenter tools, annotations, sharing | done |
+| 5 | Deployment configs, docs, polish | next |
 
 ## The lenses
 
@@ -53,6 +55,24 @@ changes; the program does not re-run, and two lenses never disagree.
 A lens with nothing to show in the current run is dimmed rather than hidden, so
 a lesson can be planned around a tab that will always be in the same place.
 
+## Teaching from it
+
+- **Lessons** (`L`) — 14 prepared snippets grouped the way a foundations course
+  runs, from variables to generators. Each one opens on the lens it was written
+  for, so the picture is already right when the class looks up.
+- **Notes** (`N`) — pin a sentence to a step. Scrub past it and the caption
+  appears; annotated steps are marked on the scrubber, so a prepared lecture
+  reads as a set of stops rather than a slider you have to remember positions on.
+- **Predict the output** (`P`) — covers the console until someone commits to an
+  answer. Everything else keeps working, so the class can reason from the code
+  and the lens before seeing the result.
+- **Presenter mode** (`Ctrl/Cmd + Shift + P`) — hides the chrome and scales every
+  size by 1.45. The timeline and the caption rail stay, because they are the only
+  things you touch mid-class.
+- **Share** — copies a link containing the files, the stdin, the notes and the
+  chosen lens, compressed into the URL fragment. No backend, no accounts, and
+  nothing leaves the browser: the fragment is never sent to a server.
+
 ## Aspirational extensions
 
 Deliberately not built. These are data-structures-and-algorithms material, and
@@ -62,6 +82,10 @@ PyLens is aimed at students learning the foundations of the language:
 - sorting animator driven by the student's own sort
 - operation counter and empirical Big-O curve
 - stack and queue views
+- third-party packages (numpy, pandas, matplotlib) via micropip — these need a
+  network fetch per package, which would undo the "loads once, then works on
+  classroom wifi" property, and the lenses have nothing useful to say about an
+  ndarray. `import numpy` currently fails with a friendly explanation instead.
 
 ## Getting started
 
@@ -69,6 +93,10 @@ PyLens is aimed at students learning the foundations of the language:
 npm install
 npm run dev      # http://localhost:5173
 ```
+
+Single-letter keys work whenever the editor does not have focus. The editor is
+deliberately not focused on load, and running with `Ctrl/Cmd + Enter` hands focus
+back to the page — after a run you are stepping, not typing.
 
 Other scripts: `npm run build`, `npm run preview`, `npm run lint`,
 `npm run typecheck`, `npm run format`.
@@ -89,9 +117,13 @@ regenerated, so the runtime never enters the repo.
 | `Home` / `End` | First / last step |
 | `Space` | Play / pause the timeline |
 | Click a line number | Jump to the next moment that line ran |
+| `N` | Write a note on this step |
+| `P` | Predict the output |
+| `L` | Open the lessons |
+| `?` | Show the shortcut list |
 | `Ctrl/Cmd + Shift + P` | Presenter mode — big type, chrome hidden |
 | `Ctrl/Cmd + Shift + L` | Light / dark theme |
-| `Esc` | Leave presenter mode |
+| `Esc` | Close what is open, or leave presenter mode |
 
 ## Layout of the source
 
@@ -104,16 +136,19 @@ src/
     output/     live console, replayed output, the friendly error card
     trace/      the timeline transport bar and scrubber
     panes/      the three workspace panes
+    teach/      lesson drawer, note rail, predict card, share, shortcut help
     ui/         shared primitives (button, icons)
-  hooks/        global keyboard shortcuts
+  hooks/        global keyboard shortcuts, shared-link loading
+  lessons/      the prepared teaching snippets
   lib/
     runtime/    worker protocol and the main-thread client
     trace/      recorded-run types, plus the selectors the lenses read
     friendlyErrors.ts   Python exceptions rewritten in plain English
+    share.ts    the whole lesson, compressed into a URL fragment
   python/
     runner.py   the driver that executes student code inside Pyodide
     tracer.py   the sys.settrace recorder and heap serialiser
-  store/        zustand state (ui, files, run, trace)
+  store/        zustand state (ui, files, run, trace, notes)
   workers/      the Pyodide worker
   index.css     design tokens — every colour in the app is defined here once
 ```

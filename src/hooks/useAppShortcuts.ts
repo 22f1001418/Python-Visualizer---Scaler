@@ -3,17 +3,16 @@ import { useTraceStore } from '@/store/traceStore';
 import { useUiStore } from '@/store/uiStore';
 
 /**
- * Global keys for the shell and the timeline.
+ * Global keys for the shell, the timeline and the teaching tools.
  *
- * Presenter mode and stepping both get keys because reaching for a mouse in
- * front of a class is exactly the friction this app exists to remove.
+ * Presenter mode hides the buttons, so everything that matters mid-class has a
+ * key. Single letters are deliberately unmodified — they are meant to be
+ * reachable one-handed while talking.
  *
- *   Ctrl/Cmd + Shift + P   presenter mode
- *   Ctrl/Cmd + Shift + L   light / dark
- *   left / right           previous / next step
- *   Home / End             first / last step
- *   Space                  play / pause
- *   Escape                 leave presenter mode
+ *   Ctrl/Cmd + Shift + P   presenter mode        left / right   step
+ *   Ctrl/Cmd + Shift + L   light / dark          Home / End     first / last
+ *   N  note this step      P  predict            Space          play / pause
+ *   L  lessons             ?  shortcuts          Escape         close
  */
 
 /** Typing in the editor or a text box must never scrub the timeline. */
@@ -29,27 +28,57 @@ export function useAppShortcuts(): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const mod = event.metaKey || event.ctrlKey;
-      const { presenter, togglePresenter, toggleTheme, setPresenter } = useUiStore.getState();
+      const ui = useUiStore.getState();
 
       if (mod && event.shiftKey && event.key.toLowerCase() === 'p') {
         event.preventDefault();
-        togglePresenter();
+        ui.togglePresenter();
         return;
       }
 
       if (mod && event.shiftKey && event.key.toLowerCase() === 'l') {
         event.preventDefault();
-        toggleTheme();
+        ui.toggleTheme();
         return;
       }
 
-      if (event.key === 'Escape' && presenter) {
-        setPresenter(false);
+      // Escape unwinds one layer at a time, innermost first.
+      if (event.key === 'Escape') {
+        if (ui.helpOpen) ui.setHelpOpen(false);
+        else if (ui.lessonsOpen) ui.setLessonsOpen(false);
+        else if (ui.noteEditing) ui.setNoteEditing(false);
+        else if (ui.presenter) ui.setPresenter(false);
         return;
       }
+
+      if (mod || event.altKey || isTyping(event.target)) return;
 
       const trace = useTraceStore.getState();
-      if (!trace.trace || mod || event.altKey || isTyping(event.target)) return;
+
+      switch (event.key) {
+        case '?':
+          event.preventDefault();
+          ui.toggleHelp();
+          return;
+        case 'l':
+        case 'L':
+          event.preventDefault();
+          ui.setLessonsOpen(!ui.lessonsOpen);
+          return;
+        case 'p':
+        case 'P':
+          event.preventDefault();
+          ui.togglePredict();
+          return;
+        case 'n':
+        case 'N':
+          if (!trace.trace) return;
+          event.preventDefault();
+          ui.setNoteEditing(true);
+          return;
+      }
+
+      if (!trace.trace) return;
 
       switch (event.key) {
         case 'ArrowLeft':

@@ -94,7 +94,18 @@ export function CodeEditor({
         indentUnit.of('    '), // PEP 8, and it matches what students are taught
         EditorState.allowMultipleSelections.of(true),
         keymap.of([
-          { key: 'Mod-Enter', run: () => (handlers.current.onRun(), true), preventDefault: true },
+          {
+            key: 'Mod-Enter',
+            // Running hands focus back to the page so the timeline keys — arrows,
+            // space, N, P — work straight away. The teaching happens after the
+            // run, not during it.
+            run: (view) => {
+              view.contentDOM.blur();
+              handlers.current.onRun();
+              return true;
+            },
+            preventDefault: true,
+          },
           ...closeBracketsKeymap,
           ...defaultKeymap,
           ...historyKeymap,
@@ -120,7 +131,9 @@ export function CodeEditor({
 
     const instance = new EditorView({ state, parent: host.current });
     view.current = instance;
-    instance.focus();
+
+    // Deliberately not focused on mount: the single-letter shortcuts have to be
+    // live the moment a lesson opens, and a click is all it takes to type.
 
     return () => {
       instance.destroy();

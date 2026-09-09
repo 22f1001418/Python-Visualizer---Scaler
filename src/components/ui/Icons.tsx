@@ -94,3 +94,47 @@ export const StepForwardIcon = ({ className }: IconProps) => (
     <path d="m10 6 6 6-6 6" />
   </svg>
 );
+
+export const BookIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H5.5A1.5 1.5 0 0 1 4 15.5Z" />
+    <path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h4.5a1.5 1.5 0 0 0 1.5-1.5Z" />
+  </svg>
+);
+
+export const ShareIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <circle cx="17.5" cy="6" r="2.6" />
+    <circle cx="6.5" cy="12" r="2.6" />
+    <circle cx="17.5" cy="18" r="2.6" />
+    <path d="m8.9 10.8 6.2-3.4M8.9 13.2l6.2 3.4" />
+  </svg>
+);
+
+export const NoteIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="M5 4.5h14v10l-4 4.5H5Z" />
+    <path d="M19 14.5h-4v4.5M8 9h8M8 12.5h5" />
+  </svg>
+);
+
+export const EyeIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12Z" />
+    <circle cx="12" cy="12" r="2.8" />
+  </svg>
+);
+
+export const HelpIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M9.7 9.4a2.4 2.4 0 1 1 3.2 2.3c-.6.25-.9.8-.9 1.5" />
+    <path d="M12 16.6h.01" />
+  </svg>
+);
+
+export const CloseIcon = ({ className }: IconProps) => (
+  <svg {...base} className={className}>
+    <path d="m6 6 12 12M18 6 6 18" />
+  </svg>
+);

@@ -3,6 +3,10 @@ import { StatusBar } from './StatusBar';
 import { TopBar } from './TopBar';
 import { Workspace } from './Workspace';
 import { TransportBar } from '@/components/trace/TransportBar';
+import { HelpOverlay } from '@/components/teach/HelpOverlay';
+import { LessonDrawer } from '@/components/teach/LessonDrawer';
+import { NoteRail } from '@/components/teach/NoteRail';
+import { useSharedWorkspace } from '@/hooks/useSharedWorkspace';
 import { applyDocumentChrome } from '@/lib/applyDocumentChrome';
 import { useAppShortcuts } from '@/hooks/useAppShortcuts';
 import { useRunStore } from '@/store/runStore';
@@ -13,6 +17,7 @@ export function AppShell() {
   const presenter = useUiStore((s) => s.presenter);
 
   useAppShortcuts();
+  useSharedWorkspace();
 
   useEffect(() => {
     applyDocumentChrome(theme, presenter);
@@ -32,8 +37,11 @@ export function AppShell() {
       {/* The timeline sits above the workspace and outlives the top bar: in
           presenter mode it is the only control that still matters. */}
       <TransportBar />
-      <main className="flex min-h-0 flex-1 flex-col gap-px bg-line">
+      <NoteRail />
+      <main className="relative flex min-h-0 flex-1 flex-col gap-px bg-line">
         <Workspace />
+        <LessonDrawer />
+        <HelpOverlay />
       </main>
       <StatusBar />
     </div>

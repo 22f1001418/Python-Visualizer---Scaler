@@ -1,6 +1,16 @@
 import { useShallow } from 'zustand/react/shallow';
 import { Button } from '@/components/ui/Button';
-import { MoonIcon, PlayIcon, PresentIcon, StopIcon, SunIcon } from '@/components/ui/Icons';
+import {
+  BookIcon,
+  HelpIcon,
+  MoonIcon,
+  PlayIcon,
+  PresentIcon,
+  ShareIcon,
+  StopIcon,
+  SunIcon,
+} from '@/components/ui/Icons';
+import { ShareButton } from '@/components/teach/ShareButton';
 import { selectActiveFile, useFilesStore } from '@/store/filesStore';
 import { useRunStore } from '@/store/runStore';
 import { useUiStore } from '@/store/uiStore';
@@ -15,6 +25,9 @@ export function TopBar() {
   const status = useRunStore((s) => s.status);
   const start = useRunStore((s) => s.start);
   const stop = useRunStore((s) => s.stop);
+
+  const setLessonsOpen = useUiStore((s) => s.setLessonsOpen);
+  const toggleHelp = useUiStore((s) => s.toggleHelp);
 
   const isRunning = status === 'running';
   const isBooting = status === 'booting';
@@ -31,6 +44,16 @@ export function TopBar() {
       <span className="truncate font-mono text-[0.85em] text-muted">{activeFile.name}</span>
 
       <div className="ml-auto flex items-center gap-1">
+        <Button
+          icon={<BookIcon className="size-full" />}
+          onClick={() => setLessonsOpen(true)}
+          title="Lessons (L)"
+        >
+          Lessons
+        </Button>
+        <ShareButton icon={<ShareIcon className="size-full" />} />
+        <span className="mx-1 h-4 w-px bg-line" />
+
         {isRunning ? (
           <Button variant="primary" icon={<StopIcon className="size-full" />} onClick={stop}>
             Stop
@@ -67,6 +90,12 @@ export function TopBar() {
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
           aria-label="Toggle colour theme"
+        />
+        <Button
+          icon={<HelpIcon className="size-full" />}
+          onClick={toggleHelp}
+          title="Keyboard shortcuts (?)"
+          aria-label="Keyboard shortcuts"
         />
       </div>
     </header>

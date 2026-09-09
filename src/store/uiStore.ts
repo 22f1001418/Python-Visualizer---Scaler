@@ -13,12 +13,25 @@ interface UiState {
   lens: LensId;
   /** Editor caret position, shown in the status bar. */
   cursor: { line: number; column: number };
+  /** Predict-the-output: hides the console until someone asks for the answer. */
+  predict: boolean;
+  /** Whether the lesson deck drawer is open. */
+  lessonsOpen: boolean;
+  /** Whether the keyboard help overlay is open. */
+  helpOpen: boolean;
+  /** True while the note for the current step is being written. */
+  noteEditing: boolean;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
   setPresenter: (on: boolean) => void;
   togglePresenter: () => void;
   setLens: (lens: LensId) => void;
   setCursor: (line: number, column: number) => void;
+  togglePredict: () => void;
+  setLessonsOpen: (open: boolean) => void;
+  setHelpOpen: (open: boolean) => void;
+  toggleHelp: () => void;
+  setNoteEditing: (editing: boolean) => void;
 }
 
 export const useUiStore = create<UiState>()(
@@ -28,12 +41,21 @@ export const useUiStore = create<UiState>()(
       presenter: false,
       lens: 'memory',
       cursor: { line: 1, column: 1 },
+      predict: false,
+      lessonsOpen: false,
+      helpOpen: false,
+      noteEditing: false,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
       setPresenter: (presenter) => set({ presenter }),
       togglePresenter: () => set((s) => ({ presenter: !s.presenter })),
       setLens: (lens) => set({ lens }),
       setCursor: (line, column) => set({ cursor: { line, column } }),
+      togglePredict: () => set((s) => ({ predict: !s.predict })),
+      setLessonsOpen: (lessonsOpen) => set({ lessonsOpen }),
+      setHelpOpen: (helpOpen) => set({ helpOpen }),
+      toggleHelp: () => set((s) => ({ helpOpen: !s.helpOpen })),
+      setNoteEditing: (noteEditing) => set({ noteEditing }),
     }),
     {
       name: 'pylens.ui',

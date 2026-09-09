@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
+  EyeIcon,
+  NoteIcon,
   PauseIcon,
   PlayIcon,
   SkipEndIcon,
@@ -15,6 +17,8 @@ import {
   selectCurrentStep,
   useTraceStore,
 } from '@/store/traceStore';
+import { annotatedSteps, useNotesStore } from '@/store/notesStore';
+import { useUiStore } from '@/store/uiStore';
 
 /**
  * The timeline for a finished run.
@@ -36,6 +40,11 @@ export function TransportBar() {
   const toEnd = useTraceStore((s) => s.toEnd);
   const togglePlay = useTraceStore((s) => s.togglePlay);
   const setSpeed = useTraceStore((s) => s.setSpeed);
+
+  const notes = useNotesStore((s) => s.notes);
+  const setNoteEditing = useUiStore((s) => s.setNoteEditing);
+  const predict = useUiStore((s) => s.predict);
+  const togglePredict = useUiStore((s) => s.togglePredict);
 
   usePlayback();
 
@@ -84,16 +93,31 @@ export function TransportBar() {
         />
       </div>
 
-      <input
-        type="range"
-        className="pl-scrubber min-w-40 flex-1"
-        min={0}
-        max={lastIndex}
-        value={stepIndex}
-        onChange={(event) => goTo(Number(event.target.value))}
-        aria-label="Step through the run"
-        aria-valuetext={`Step ${stepIndex + 1} of ${trace.steps.length}`}
-      />
+      <div className="relative flex min-w-40 flex-1 items-center">
+        <input
+          type="range"
+          className="pl-scrubber w-full"
+          min={0}
+          max={lastIndex}
+          value={stepIndex}
+          onChange={(event) => goTo(Number(event.target.value))}
+          aria-label="Step through the run"
+          aria-valuetext={`Step ${stepIndex + 1} of ${trace.steps.length}`}
+        />
+
+        {/* Notes are marked on the track so a prepared lecture reads as a set of
+            stops rather than a slider you have to remember positions on. */}
+        {annotatedSteps(notes)
+          .filter((index) => index <= lastIndex)
+          .map((index) => (
+            <span
+              key={index}
+              className="pointer-events-none absolute top-0 h-2 w-0.5 -translate-x-1/2 rounded-full bg-warn"
+              style={{ left: `${lastIndex === 0 ? 0 : (index / lastIndex) * 100}%` }}
+              aria-hidden="true"
+            />
+          ))}
+      </div>
 
       <div className="flex items-center gap-2 font-mono text-[0.8em] text-muted tabular-nums">
         <span>
@@ -119,6 +143,23 @@ export function TransportBar() {
             {value}x
           </Button>
         ))}
+      </div>
+
+      <div className="flex items-center gap-0.5">
+        <Button
+          icon={<NoteIcon className="size-full" />}
+          active={Boolean(notes[stepIndex])}
+          onClick={() => setNoteEditing(true)}
+          title={notes[stepIndex] ? 'Edit the note on this step (N)' : 'Note this step (N)'}
+          aria-label="Note this step"
+        />
+        <Button
+          icon={<EyeIcon className="size-full" />}
+          active={predict}
+          onClick={togglePredict}
+          title="Predict the output — hide the console until someone answers (P)"
+          aria-label="Predict the output"
+        />
       </div>
 
       {trace.capped ? (

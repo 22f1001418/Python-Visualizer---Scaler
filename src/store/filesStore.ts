@@ -38,6 +38,8 @@ interface FilesState {
   renameFile: (id: string, name: string) => void;
   closeFile: (id: string) => void;
   setStdin: (stdin: string) => void;
+  /** Replace the whole workspace — used by lessons and shared links. */
+  loadWorkspace: (files: Array<{ name: string; source: string }>, stdin?: string) => void;
 }
 
 /** Filenames have to be importable Python module names, plus the .py. */
@@ -113,6 +115,18 @@ export const useFilesStore = create<FilesState>()(
       },
 
       setStdin: (stdin) => set({ stdin }),
+
+      loadWorkspace: (incoming, stdin = '') => {
+        const taken: string[] = [];
+        const files = incoming.map((file) => {
+          const name = normaliseFileName(file.name, taken);
+          taken.push(name);
+          return { id: newId(), name, source: file.source };
+        });
+
+        if (files.length === 0) return;
+        set({ files, activeId: files[0].id, stdin });
+      },
     }),
     { name: 'pylens.files', version: 1 }
   )

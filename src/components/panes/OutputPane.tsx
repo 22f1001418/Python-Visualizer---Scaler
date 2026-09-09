@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { PaneFrame } from '@/components/layout/PaneFrame';
 import { ConsoleView } from '@/components/output/ConsoleView';
 import { ErrorCard } from '@/components/output/ErrorCard';
@@ -5,7 +6,9 @@ import { ReplayView } from '@/components/output/ReplayView';
 import { Button } from '@/components/ui/Button';
 import { TerminalIcon } from '@/components/ui/Icons';
 import { useRunStore } from '@/store/runStore';
+import { PredictCard } from '@/components/teach/PredictCard';
 import { selectVisibleStdout, useTraceStore } from '@/store/traceStore';
+import { useUiStore } from '@/store/uiStore';
 
 export function OutputPane() {
   const lines = useRunStore((s) => s.lines);
@@ -20,7 +23,14 @@ export function OutputPane() {
   const stepIndex = useTraceStore((s) => s.stepIndex);
   const visibleStdout = useTraceStore(selectVisibleStdout);
 
+  const predict = useUiStore((s) => s.predict);
+  const [revealed, setRevealed] = useState(false);
+
+  // Each new step is a new question, so the cover goes back on by itself.
+  useEffect(() => setRevealed(false), [stepIndex, predict]);
+
   const replaying = trace !== null && trace.steps.length > 0;
+  const hidden = predict && !revealed;
   const atEnd = !replaying || stepIndex >= trace.steps.length - 1;
   const isEmpty = lines.length === 0 && !error && !fatal && !replaying;
 
@@ -45,7 +55,9 @@ export function OutputPane() {
         </>
       }
     >
-      {fatal ? (
+      {hidden ? <PredictCard onReveal={() => setRevealed(true)} /> : null}
+
+      {!hidden && fatal ? (
         <div className="m-3 rounded-lg border border-error/40 bg-error-soft p-3">
           <p className="text-[0.95em] font-semibold text-error">The Python runtime stopped</p>
           <p className="pt-1 text-[0.88em] text-fg">{fatal}</p>
@@ -53,7 +65,7 @@ export function OutputPane() {
         </div>
       ) : null}
 
-      {isEmpty && !fatal ? (
+      {!hidden && isEmpty && !fatal ? (
         <p className="p-3 text-[0.88em] text-subtle">
           {status === 'booting'
             ? 'Starting Python…'
@@ -63,13 +75,13 @@ export function OutputPane() {
 
       {/* While the program runs, output streams in live; once it finishes there
           is a recording, and the timeline decides how much of it to show. */}
-      {replaying ? (
+      {!hidden && replaying ? (
         <ReplayView text={visibleStdout} atEnd={atEnd} />
-      ) : lines.length > 0 ? (
+      ) : !hidden && lines.length > 0 ? (
         <ConsoleView lines={lines} truncated={truncated} />
       ) : null}
 
-      {error && atEnd ? <ErrorCard error={error} /> : null}
+      {!hidden && error && atEnd ? <ErrorCard error={error} /> : null}
     </PaneFrame>
   );
 }
