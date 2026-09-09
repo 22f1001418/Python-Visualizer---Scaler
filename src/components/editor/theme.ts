@@ -1,7 +1,7 @@
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { EditorView } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
-import type { Extension } from '@codemirror/state';
+import { Prec, type Extension } from '@codemirror/state';
 
 /**
  * CodeMirror styling, expressed entirely in the app's CSS variables.
@@ -39,8 +39,14 @@ const editorTheme = EditorView.theme({
     color: 'var(--c-text-muted)',
   },
   '.cm-cursor, .cm-dropCursor': { borderLeftWidth: '2px', borderLeftColor: 'var(--c-accent)' },
+  // CodeMirror ships its own built-in default selection colours (a hardcoded
+  // light-grey/lavender fallback theme, since we never opt into { dark: true })
+  // via a selector like ".cm-focused > .cm-scroller > .cm-selectionLayer
+  // .cm-selectionBackground" — specific enough to beat a plain override, so it
+  // silently wins regardless of our --c-editor-selection variable. !important
+  // settles that regardless of how CM's internals evolve.
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
-    backgroundColor: 'var(--c-editor-selection)',
+    backgroundColor: 'var(--c-editor-selection) !important',
   },
   '&.cm-focused': { outline: 'none' },
   '.cm-matchingBracket, &.cm-focused .cm-matchingBracket': {
@@ -87,4 +93,36 @@ const highlightStyle = HighlightStyle.define([
   { tag: t.invalid, color: 'var(--c-error)' },
 ]);
 
-export const pylensEditorTheme: Extension = [editorTheme, syntaxHighlighting(highlightStyle)];
+// CodeMirror's drawSelection() extension hides native text selection and
+// draws its own overlay instead — except while the editor is focused, when it
+// deliberately shows the real native ::selection using the browser/OS
+// "Highlight" system color (Prec.highest, !important) so a11y tooling sees a
+// real selection. That system color is often a bright, undimmed blue/lavender
+// that ignores our theme entirely, which is exactly the "too bright" report.
+//
+// Both that rule and this one land in the stylesheet at Prec.highest, so
+// which one wins the tie comes down to insertion order — and CM's own rule
+// is inserted after ours, so it won. Rather than fight that ordering, this
+// rule outguns it on plain CSS specificity by repeating each class/pseudo
+// (".cm-content.cm-content", ":focus:focus"), which matches the exact same
+// element but counts as more selectors — so it wins regardless of order.
+const nativeSelectionColor = Prec.highest(
+  EditorView.theme({
+    '.cm-line.cm-line': {
+      '&::selection, & ::selection': { backgroundColor: 'var(--c-editor-selection) !important' },
+    },
+    '.cm-content.cm-content': {
+      '& :focus:focus': {
+        '&::selection, & ::selection': {
+          backgroundColor: 'var(--c-editor-selection) !important',
+        },
+      },
+    },
+  }),
+);
+
+export const pylensEditorTheme: Extension = [
+  editorTheme,
+  syntaxHighlighting(highlightStyle),
+  nativeSelectionColor,
+];
