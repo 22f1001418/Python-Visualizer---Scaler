@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { NameValueRow } from './shared/values';
+import { changedKeys } from '@/lib/trace/story';
 import { LensEmpty } from './shared/LensEmpty';
 import type { LensProps } from './types';
 
@@ -10,7 +12,10 @@ import type { LensProps } from './types';
  * it returns. When the same function appears twice, the lens says so — that is
  * recursion, seen rather than described.
  */
-export function StackLens({ step }: LensProps) {
+export function StackLens({ step, trace, stepIndex }: LensProps) {
+  // Highlighting what moved is the difference between a photograph and a story.
+  const changed = useMemo(() => changedKeys(trace, stepIndex), [trace, stepIndex]);
+
   const counts = new Map<string, number>();
   for (const frame of step.frames) {
     if (!frame.module) counts.set(frame.name, (counts.get(frame.name) ?? 0) + 1);
@@ -50,7 +55,13 @@ export function StackLens({ step }: LensProps) {
 
             <div className="flex flex-col gap-0.5 p-2">
               {frame.locals.map(([name, value]) => (
-                <NameValueRow key={name} name={name} value={value} heap={step.heap} />
+                <NameValueRow
+                  key={name}
+                  name={name}
+                  value={value}
+                  heap={step.heap}
+                  highlighted={changed.has(`${frame.id}:${name}`)}
+                />
               ))}
               {frame.locals.length === 0 ? (
                 <p className="text-[0.8em] text-subtle italic">no variables yet</p>

@@ -20,10 +20,20 @@ tree.
 
 ## Status
 
-Phases 0 through 4 are complete. PyLens is a working Python IDE, a time machine
-over any run, six ways of looking at the moment you have scrubbed to, and the
-tools to teach from it: a lesson deck, notes pinned to steps, predict-the-output,
-presenter mode, and a share link that carries the whole lesson.
+Phases 0 through 4 are complete, and the visualizer has since been rebuilt
+around what beginners actually need.
+
+PyLens is a working Python IDE, a time machine over any run, and two ways of
+looking at the moment you have scrubbed to:
+
+- **Explain** (the default) answers *what is this line about to do* and *what
+  just changed*, in plain words and in the code itself.
+- **Inspect** has the six diagrams — memory and references, the call stack, loop
+  tables, collections, objects, generators.
+
+Plus the tools to teach from it: a lesson deck, notes pinned to steps,
+predict-the-output, presenter mode, and a share link that carries the whole
+lesson.
 
 The scope is deliberately the **foundations of Python**, not data structures and
 algorithms. Everything DSA-flavoured is parked under
@@ -37,6 +47,60 @@ algorithms. Everything DSA-flavoured is parked under
 | 3 | Concept lenses | done |
 | 4 | Presenter tools, annotations, sharing | done |
 | 5 | Deployment configs, docs, polish | next |
+
+## Explain mode
+
+The default view, and deliberately not a diagram.
+
+**Values filled in, in place.** The line is shown as written, then again with
+every name replaced by the value it holds, then with the answer:
+
+```
+the line                    total = total + n
+with the values filled in   total = 4 + 8
+so now                      total = 12
+```
+
+The same substitution appears at the end of the line **in the editor**, so the
+code is the visualization and the eye never has to travel.
+
+**A sentence per step.** "Work out the right-hand side first, then put the name
+total on the answer." "add_bonus() starts running, with its own copy of the
+values it was given." Derived from the statement kind and the recorded values —
+nothing is hand-written per program.
+
+**What just changed.** Every step shows the difference from the previous one:
+`n  4 → 8`. A memory diagram shows where things stand; it never shows what moved,
+and what moved is the thing a beginner is trying to work out.
+
+**Loops laid out flat.** Every pass side by side with the current one lit, so a
+loop reads as "it walks along these, one at a time" rather than as a slider
+position. Click any pass to jump to it.
+
+**Calls and returns as flows.** Entering a function shows the arguments becoming
+its own variables; leaving one shows `add_bonus() → 77`.
+
+## Why it looks like this
+
+The first version of the visualizer was, structurally, Python Tutor — and
+research on exactly that shape found it wanting for novices: it "provides precise
+memory traces but does not help learners abstract what the computation is about",
+and on its own sometimes engaged students *less* than a plain text explanation
+([From Code to Concept, arXiv 2509.26466](https://arxiv.org/html/2509.26466)).
+The fix that paper proposes is coordinated views at different levels of
+abstraction, with the concrete one fading as understanding grows.
+
+Explain mode is that abstract view. The substitution idea is
+[Thonny's](https://github.com/thonny/thonny/blob/master/thonny/plugins/help/debuggers.rst)
+"small step" — its own metaphor is a piece of paper where Python replaces
+subexpressions with their values, piece by piece. Inline values and per-iteration
+loop navigation come from [birdseye](https://birdseye.readthedocs.io/en/latest/quickstart.html).
+Laying every pass of a loop out at once, and making time scrubbable rather than
+merely steppable, are from Bret Victor's
+[Learnable Programming](http://worrydream.com/LearnableProgramming/).
+
+Inspect mode keeps the faithful diagrams, because they are right later — just not
+in week one.
 
 ## The lenses
 
@@ -120,6 +184,7 @@ regenerated, so the runtime never enters the repo.
 | `N` | Write a note on this step |
 | `P` | Predict the output |
 | `L` | Open the lessons |
+| `E` | Switch between Explain and Inspect |
 | `?` | Show the shortcut list |
 | `Ctrl/Cmd + Shift + P` | Presenter mode — big type, chrome hidden |
 | `Ctrl/Cmd + Shift + L` | Light / dark theme |
@@ -130,7 +195,8 @@ regenerated, so the runtime never enters the repo.
 ```
 src/
   components/
-    editor/     CodeMirror setup: theme, completions, tabs, line marking
+    editor/     CodeMirror setup: theme, completions, tabs, line and value marking
+    explain/    Explain mode: the beats, the change strip, the loop strip
     layout/     app shell, top bar, status bar, workspace splits, pane chrome
     lenses/     the six concept lenses, plus their shared value rendering
     output/     live console, replayed output, the friendly error card
@@ -142,12 +208,12 @@ src/
   lessons/      the prepared teaching snippets
   lib/
     runtime/    worker protocol and the main-thread client
-    trace/      recorded-run types, plus the selectors the lenses read
+    trace/      recorded-run types, the lens selectors, and the plain-words story
     friendlyErrors.ts   Python exceptions rewritten in plain English
     share.ts    the whole lesson, compressed into a URL fragment
   python/
     runner.py   the driver that executes student code inside Pyodide
-    tracer.py   the sys.settrace recorder and heap serialiser
+    tracer.py   the sys.settrace recorder, heap serialiser and source index
   store/        zustand state (ui, files, run, trace, notes)
   workers/      the Pyodide worker
   index.css     design tokens — every colour in the app is defined here once
@@ -175,6 +241,12 @@ the misconception the whole tool is built around.
 Recording stops, but the program does not, after 2,000 steps or 20 seconds. The
 student still gets their complete output; the timeline simply covers the part
 that fits, and says so.
+
+Alongside the state, each line step records its own source, what kind of
+statement it is, the names it assigns, and the same line with every readable name
+replaced by its current value. That last one is what Explain mode shows, and it
+is computed once, in Python, from the module's AST — no expression is ever
+evaluated twice.
 
 Nothing is re-executed while you scrub. The run is over; the UI is reading a
 list.

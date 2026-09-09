@@ -4,6 +4,7 @@ import { ValueChip } from './shared/values';
 import { LensEmpty } from './shared/LensEmpty';
 import { useConnectors, type Connector } from './shared/useConnectors';
 import { bindingsOf, heapEdges, reachableObjects, referenceCounts } from '@/lib/trace/lensData';
+import { changedKeys } from '@/lib/trace/story';
 import { isReference } from '@/lib/trace/types';
 import type { LensProps } from './types';
 
@@ -14,8 +15,9 @@ import type { LensProps } from './types';
  * the list looks at two arrows landing on one box and stops believing it. Every
  * other lens is a specialisation of this picture.
  */
-export function MemoryLens({ step }: LensProps) {
+export function MemoryLens({ step, trace, stepIndex }: LensProps) {
   const host = useRef<HTMLDivElement>(null);
+  const changed = useMemo(() => changedKeys(trace, stepIndex), [trace, stepIndex]);
 
   const bindings = useMemo(() => bindingsOf(step), [step]);
   const objects = useMemo(() => reachableObjects(step), [step]);
@@ -100,7 +102,9 @@ export function MemoryLens({ step }: LensProps) {
                     <div
                       key={name}
                       data-anchor={`src:${frame.id}:${name}`}
-                      className="flex items-baseline justify-between gap-2 rounded px-1 py-0.5"
+                      className={`flex items-baseline justify-between gap-2 rounded px-1 py-0.5 ${
+                        changed.has(`${frame.id}:${name}`) ? 'bg-accent-soft' : ''
+                      }`}
                     >
                       <span className="font-mono text-[0.85em] text-fg">{name}</span>
                       {isReference(value) ? (

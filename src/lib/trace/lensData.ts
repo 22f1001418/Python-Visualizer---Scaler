@@ -284,6 +284,25 @@ function busiestLine(steps: TraceStep[]): number | null {
   return bestCount >= 2 ? best : null;
 }
 
+/**
+ * Which pass of the loop is happening right now.
+ *
+ * Rows hold the state *after* a pass, so the pass in flight is the one after the
+ * last row that has settled. Highlighting the settled row instead would point at
+ * the pass that already finished, which is never the one being talked about.
+ * Returns one past the last pass once the loop is over, so callers can tell
+ * "running the final pass" from "finished".
+ */
+export function currentPass(analysis: LoopAnalysis, stepIndex: number): number {
+  const passes = analysis.rows.filter((row) => row.iteration > 0);
+  return passes.filter((row) => row.stepIndex <= stepIndex).length + 1;
+}
+
+/** How many passes the loop makes in total. */
+export function passCount(analysis: LoopAnalysis): number {
+  return analysis.rows.filter((row) => row.iteration > 0).length;
+}
+
 /** Frames that are not the module — the ones a call-stack lens draws as calls. */
 export function callFrames(step: TraceStep): TraceFrame[] {
   return step.frames.filter((frame) => !frame.module);

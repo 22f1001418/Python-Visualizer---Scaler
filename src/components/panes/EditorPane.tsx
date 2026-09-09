@@ -25,6 +25,12 @@ export function EditorPane() {
    * While a trace is being read, the current step is what the room is looking
    * at; the error line only takes over once there is no timeline to follow.
    */
+  /** Thonny's trick: the same line with the names replaced by their values. */
+  const inline = useMemo(() => {
+    if (!step || step.file !== activeFile.name || !step.sub) return null;
+    return { line: step.line, text: `→ ${step.sub}` };
+  }, [step, activeFile.name]);
+
   const marked = useMemo(() => {
     if (step && step.file === activeFile.name) {
       return { line: step.line, className: 'pl-current-line' };
@@ -48,6 +54,7 @@ export function EditorPane() {
             onRun={start}
             onGutterJump={(line) => jumpToLine(activeFile.name, line)}
             marked={marked}
+            inline={inline}
           />
         </div>
         <StdinBox />

@@ -184,7 +184,7 @@ def run(files, entry, stdin_text="", max_steps=2000, max_seconds=20):
             {"ok": False, "error": _describe(exc, set(files)), "stdout": "", "trace": None}
         )
 
-    tracer = Recorder(set(files), max_steps, max_seconds, recorder)
+    tracer = Recorder(set(files), max_steps, max_seconds, recorder, SourceIndex(files))
     error = None
 
     try:

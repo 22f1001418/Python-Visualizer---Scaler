@@ -6,11 +6,21 @@ import type { LensId } from '@/components/lenses/registry';
 
 export type Theme = 'light' | 'dark';
 
+/**
+ * How much of the machine to show.
+ *
+ * 'explain' answers what a line does, in words. 'inspect' is the diagram set —
+ * right for later in a course, wrong for the first week. Keeping both and
+ * letting the teacher choose is the concreteness-fading idea made into a switch.
+ */
+export type VisualMode = 'explain' | 'inspect';
+
 interface UiState {
   theme: Theme;
   /** Presenter mode: bigger type, hidden chrome, projector contrast. */
   presenter: boolean;
   lens: LensId;
+  mode: VisualMode;
   /** Editor caret position, shown in the status bar. */
   cursor: { line: number; column: number };
   /** Predict-the-output: hides the console until someone asks for the answer. */
@@ -26,6 +36,7 @@ interface UiState {
   setPresenter: (on: boolean) => void;
   togglePresenter: () => void;
   setLens: (lens: LensId) => void;
+  setMode: (mode: VisualMode) => void;
   setCursor: (line: number, column: number) => void;
   togglePredict: () => void;
   setLessonsOpen: (open: boolean) => void;
@@ -40,6 +51,7 @@ export const useUiStore = create<UiState>()(
       theme: 'dark',
       presenter: false,
       lens: 'memory',
+      mode: 'explain',
       cursor: { line: 1, column: 1 },
       predict: false,
       lessonsOpen: false,
@@ -50,6 +62,7 @@ export const useUiStore = create<UiState>()(
       setPresenter: (presenter) => set({ presenter }),
       togglePresenter: () => set((s) => ({ presenter: !s.presenter })),
       setLens: (lens) => set({ lens }),
+      setMode: (mode) => set({ mode }),
       setCursor: (line, column) => set({ cursor: { line, column } }),
       togglePredict: () => set((s) => ({ predict: !s.predict })),
       setLessonsOpen: (lessonsOpen) => set({ lessonsOpen }),
@@ -61,7 +74,7 @@ export const useUiStore = create<UiState>()(
       name: 'pylens.ui',
       // Presenter mode is a per-session decision, not something to restore on
       // the next launch — you don't want yesterday's lecture layout at your desk.
-      partialize: ({ theme, lens }) => ({ theme, lens }),
+      partialize: ({ theme, lens, mode }) => ({ theme, lens, mode }),
     }
   )
 );

@@ -99,6 +99,21 @@ export interface TraceFrame {
 
 export type TraceEvent = 'call' | 'line' | 'return' | 'exception';
 
+/** What kind of statement a line is, in terms a beginner would recognise. */
+export type StatementKind =
+  | 'assign'
+  | 'augassign'
+  | 'for'
+  | 'while'
+  | 'if'
+  | 'return'
+  | 'call'
+  | 'def'
+  | 'class'
+  | 'import'
+  | 'expr'
+  | 'other';
+
 export interface TraceStep {
   i: number;
   e: TraceEvent;
@@ -111,6 +126,14 @@ export interface TraceStep {
   heap: Record<string, HeapObject>;
   /** Characters of stdout written by this point — used to replay output. */
   out: number;
+  /** The line's own source, stripped of indentation. */
+  src?: string;
+  /** The same line with names replaced by the values they hold right now. */
+  sub?: string;
+  /** What kind of statement this line is. */
+  k?: StatementKind;
+  /** Names this line assigns to. */
+  tg?: string[];
   /** The returned value, on a 'return' step. */
   ret?: PyValue;
   exc?: { type: string; message: string };

@@ -12,7 +12,7 @@ import { useUiStore } from '@/store/uiStore';
  *   Ctrl/Cmd + Shift + P   presenter mode        left / right   step
  *   Ctrl/Cmd + Shift + L   light / dark          Home / End     first / last
  *   N  note this step      P  predict            Space          play / pause
- *   L  lessons             ?  shortcuts          Escape         close
+ *   L  lessons             E  explain / inspect   ?  shortcuts   Escape  close
  */
 
 /** Typing in the editor or a text box must never scrub the timeline. */
@@ -69,6 +69,11 @@ export function useAppShortcuts(): void {
         case 'P':
           event.preventDefault();
           ui.togglePredict();
+          return;
+        case 'e':
+        case 'E':
+          event.preventDefault();
+          ui.setMode(ui.mode === 'explain' ? 'inspect' : 'explain');
           return;
         case 'n':
         case 'N':

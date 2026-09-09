@@ -10,6 +10,7 @@ const SHORTCUTS: Array<[string, string]> = [
   ['N', 'Write a note on this step'],
   ['P', 'Predict the output'],
   ['L', 'Open the lessons'],
+  ['E', 'Switch between Explain and Inspect'],
   ['Ctrl/Cmd + Shift + P', 'Presenter mode'],
   ['Ctrl/Cmd + Shift + L', 'Light / dark theme'],
   ['?', 'This list'],

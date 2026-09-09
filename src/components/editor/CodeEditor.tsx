@@ -29,6 +29,7 @@ import { highlightSelectionMatches, searchKeymap } from '@codemirror/search';
 import { python } from '@codemirror/lang-python';
 import { pylensEditorTheme } from './theme';
 import { markedLine, setMarkedLine } from './errorLine';
+import { inlineValues, setInlineValues } from './inlineValues';
 import { pythonCompletions } from './completions';
 
 interface CodeEditorProps {
@@ -42,6 +43,8 @@ interface CodeEditorProps {
   onGutterJump: (line: number) => void;
   /** 1-based line to mark, with the CSS class to mark it with. */
   marked: { line: number; className: string } | null;
+  /** The current line rewritten with its values, shown at the end of that line. */
+  inline: { line: number; text: string } | null;
 }
 
 export function CodeEditor({
@@ -52,6 +55,7 @@ export function CodeEditor({
   onRun,
   onGutterJump,
   marked,
+  inline,
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
@@ -115,6 +119,7 @@ export function CodeEditor({
           indentWithTab,
         ]),
         markedLine,
+        inlineValues,
         pylensEditorTheme,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
@@ -143,6 +148,13 @@ export function CodeEditor({
     // re-seeding on every keystroke would fight the user for the cursor.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileId]);
+
+  useEffect(() => {
+    const instance = view.current;
+    if (!instance) return;
+
+    instance.dispatch({ effects: setInlineValues.of(inline) });
+  }, [inline]);
 
   useEffect(() => {
     const instance = view.current;

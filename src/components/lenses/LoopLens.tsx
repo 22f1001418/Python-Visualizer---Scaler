@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ValueChip } from './shared/values';
 import { LensEmpty } from './shared/LensEmpty';
-import { analyseLoop } from '@/lib/trace/lensData';
+import { analyseLoop, currentPass, passCount } from '@/lib/trace/lensData';
 import { useTraceStore } from '@/store/traceStore';
 import type { LensProps } from './types';
 
@@ -25,11 +25,8 @@ export function LoopLens({ trace, stepIndex }: LensProps) {
     );
   }
 
-  // The row being executed is the last one that started at or before this step.
-  const currentRow = analysis.rows.reduce(
-    (best, row, index) => (row.stepIndex <= stepIndex ? index : best),
-    0
-  );
+  // The pass in flight, or the last one once the loop is over.
+  const currentRow = Math.min(currentPass(analysis, stepIndex), passCount(analysis));
 
   return (
     <div className="flex h-full flex-col overflow-auto">
