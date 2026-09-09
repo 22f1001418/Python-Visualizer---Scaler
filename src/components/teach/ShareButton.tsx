@@ -41,7 +41,9 @@ export function ShareButton({ icon }: { icon: ReactNode }) {
 
   return (
     <Button icon={icon} onClick={share} title="Copy a link to this lesson">
-      {state === 'copied' ? 'Link copied' : state === 'failed' ? 'Copy failed' : 'Share'}
+      <span className="max-[720px]:hidden">
+        {state === 'copied' ? 'Link copied' : state === 'failed' ? 'Copy failed' : 'Share'}
+      </span>
     </Button>
   );
 }

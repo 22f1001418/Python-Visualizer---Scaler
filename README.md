@@ -20,7 +20,7 @@ tree.
 
 ## Status
 
-Phases 0 through 4 are complete, and the visualizer has since been rebuilt
+All five phases are complete, and the visualizer was rebuilt along the way
 around what beginners actually need.
 
 PyLens is a working Python IDE, a time machine over any run, and two ways of
@@ -46,7 +46,7 @@ algorithms. Everything DSA-flavoured is parked under
 | 2 | Trace engine, timeline store, scrubber | done |
 | 3 | Concept lenses | done |
 | 4 | Presenter tools, annotations, sharing | done |
-| 5 | Deployment configs, docs, polish | next |
+| 5 | Deployment configs, small-screen view, docs | done |
 
 ## Explain mode
 
@@ -201,10 +201,10 @@ src/
     lenses/     the six concept lenses, plus their shared value rendering
     output/     live console, replayed output, the friendly error card
     trace/      the timeline transport bar and scrubber
-    panes/      the three workspace panes
+    panes/      the workspace panes, including the read-only code view
     teach/      lesson drawer, note rail, predict card, share, shortcut help
     ui/         shared primitives (button, icons)
-  hooks/        global keyboard shortcuts, shared-link loading
+  hooks/        global keyboard shortcuts, shared-link loading, the narrow-screen test
   lessons/      the prepared teaching snippets
   lib/
     runtime/    worker protocol and the main-thread client
@@ -274,6 +274,47 @@ theme swap and the projector-contrast tuning stay in one file.
 
 ## Deployment
 
-The build output in `dist/` is static and works on Vercel or a Render static
-site. Both need the cross-origin isolation headers already set in
-`vite.config.ts`; the platform config files land in phase 5.
+`dist/` is a plain static bundle — no server, no routing rules (share links live
+in the URL fragment). Two hosts are configured:
+
+| Host | Config | Role |
+| ---- | ------ | ---- |
+| Vercel | `vercel.json` | primary |
+| Render static site | `render.yaml` | backup, same bundle |
+
+Either way the host runs `npm ci && npm run build` and serves `dist/`. The
+`prebuild` script copies the Pyodide runtime out of `node_modules`, so nothing
+extra has to be committed or configured.
+
+**Vercel:** `vercel link` once, then `vercel --prod` — or point a project at the
+repo and let it build on push. **Render:** *New → Blueprint*, pointed at this
+repo; `render.yaml` describes the whole site.
+
+### The headers that matter
+
+Both configs set **`Cross-Origin-Opener-Policy: same-origin`** and
+**`Cross-Origin-Embedder-Policy: require-corp`**, the same pair `vite.config.ts`
+sets for `dev` and `preview`. They are what make `SharedArrayBuffer` available,
+and `SharedArrayBuffer` is what lets **Stop** deliver a `KeyboardInterrupt` to a
+running program. Without them nothing looks broken — Stop quietly falls back to
+killing the worker and booting a fresh interpreter, three seconds of dead air in
+the middle of a class.
+
+So the status bar says **Isolation off** in amber whenever
+`window.crossOriginIsolated` is false. That is the first thing to check on a
+fresh deployment: open it and look at the bottom right. Nothing there means the
+headers landed.
+
+Caching is set per path. Vite's hashed `/assets/*` are immutable for a year; the
+~15 MB `/pyodide/*` runtime is cached for 30 days — long enough that a classroom
+fetches it once a month, short enough to recover from a Pyodide upgrade, whose
+filenames are *not* versioned. After bumping the `pyodide` dependency, expect
+returning browsers to keep the old runtime until that window expires.
+
+### Small screens
+
+Below 720px wide the editor is dropped. A share link opened on a phone gets the
+same run and the same timeline, with a read-only listing of the code in place of
+CodeMirror: the running line is highlighted, the values-filled-in version sits
+under it, and tapping a line jumps the timeline there. Everything else — Explain,
+Inspect, the output, the notes — is unchanged.

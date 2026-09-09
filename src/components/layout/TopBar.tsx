@@ -39,9 +39,13 @@ export function TopBar() {
         <span className="text-[1.05em] font-semibold tracking-tight">PyLens</span>
       </div>
 
-      <span className="h-4 w-px bg-line" />
+      {/* On a phone the bar is down to the buttons that still do something:
+          the name and the button labels are the first things to go. */}
+      <span className="h-4 w-px bg-line max-[720px]:hidden" />
 
-      <span className="truncate font-mono text-[0.85em] text-muted">{activeFile.name}</span>
+      <span className="truncate font-mono text-[0.85em] text-muted max-[720px]:hidden">
+        {activeFile.name}
+      </span>
 
       <div className="ml-auto flex items-center gap-1">
         <Button
@@ -49,14 +53,14 @@ export function TopBar() {
           onClick={() => setLessonsOpen(true)}
           title="Lessons (L)"
         >
-          Lessons
+          <span className="max-[720px]:hidden">Lessons</span>
         </Button>
         <ShareButton icon={<ShareIcon className="size-full" />} />
         <span className="mx-1 h-4 w-px bg-line" />
 
         {isRunning ? (
           <Button variant="primary" icon={<StopIcon className="size-full" />} onClick={stop}>
-            Stop
+            <span className="max-[720px]:hidden">Stop</span>
           </Button>
         ) : (
           <Button
@@ -66,7 +70,7 @@ export function TopBar() {
             disabled={isBooting}
             title="Run (Ctrl/Cmd + Enter)"
           >
-            {isBooting ? 'Starting…' : 'Run'}
+            <span className="max-[720px]:hidden">{isBooting ? 'Starting…' : 'Run'}</span>
           </Button>
         )}
 

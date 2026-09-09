@@ -19,6 +19,15 @@ const STATUS_DOT: Record<RuntimeStatus, string> = {
   error: 'bg-error',
 };
 
+/**
+ * Cross-origin isolation is what makes SharedArrayBuffer — and therefore a Stop
+ * that interrupts instead of killing the interpreter — available. It depends on
+ * response headers, so it can only break at deploy time, in a way nothing else
+ * on screen would show. Hence the badge: one glance at a fresh deployment says
+ * whether the headers in vercel.json / render.yaml actually landed.
+ */
+const isolated = typeof window !== 'undefined' && window.crossOriginIsolated;
+
 export function StatusBar() {
   const presenter = useUiStore((s) => s.presenter);
   const cursor = useUiStore((s) => s.cursor);
@@ -43,6 +52,14 @@ export function StatusBar() {
       </span>
 
       <span className="ml-auto flex items-center gap-3">
+        {!isolated ? (
+          <span
+            className="text-warn"
+            title="Cross-origin isolation is off, so Stop has to restart Python instead of interrupting it. Check the COOP/COEP headers for this deployment."
+          >
+            Isolation off
+          </span>
+        ) : null}
         {presenter ? <span className="font-medium text-accent">Presenter</span> : null}
         <span>
           Ln {cursor.line}, Col {cursor.column}
